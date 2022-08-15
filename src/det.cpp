@@ -25,12 +25,9 @@ void TextDetect::Model_Infer(cv::Mat& img, vector<vector<vector<int>>>& boxes, v
     void* buffers[2];
     // 为buffer[0]指针（输入）定义空间大小
     float *inBlob = new float[1 * 3 * resize_img.rows * resize_img.cols];
-//    std::unique_ptr<float[]> inBlob(new float[1 * 3 * resize_img.rows * resize_img.cols]);
     this->permute_op_.Run(&resize_img, inBlob);
 
-    // 这里的inputIndex可以使用0来代替吗？trt里面给出的例程是也是通过onnx的名字来获取的，而不是直接通过0或者1
-    int inputIndex = engine->getBindingIndex(INPUT_BLOB_NAME);
-    // cout<<"inputIndex:"<<inputIndex<<endl;
+    int inputIndex = 0;
 
     CHECK(cudaMalloc(&buffers[inputIndex], 1 * 3 * resize_img.rows * resize_img.cols * sizeof(float)));
     
@@ -42,7 +39,7 @@ void TextDetect::Model_Infer(cv::Mat& img, vector<vector<vector<int>>>& boxes, v
     CHECK(cudaMemcpyAsync(buffers[inputIndex], inBlob, 1 * 3 * resize_img.rows * resize_img.cols * sizeof(float), cudaMemcpyHostToDevice, stream));
     
     //#### 将输入图像的大小写入context中 #######
-    context->setOptimizationProfile(0); // 让convert.h创建engine的动态输入配置生效
+    context->setOptimizationProfileAsync(0, stream); // 让convert.h创建engine的动态输入配置生效
     auto in_dims = context->getBindingDimensions(inputIndex); //获取带有可变维度的输入维度信息
     
     in_dims.d[0]=1;
@@ -52,8 +49,7 @@ void TextDetect::Model_Infer(cv::Mat& img, vector<vector<vector<int>>>& boxes, v
     context->setBindingDimensions(inputIndex, in_dims); // 根据输入图像大小更新输入维度
 
     // 为buffer[1]指针（输出）定义空间大小
-    int outputIndex = engine->getBindingIndex(OUTPUT_BLOB_NAME);
-//    cout<<"outputIndex:"<<outputIndex<<endl;
+    int outputIndex = 1;
     auto out_dims = context->getBindingDimensions(outputIndex);
     int output_size=1;
     for(int j=0; j<out_dims.nbDims; j++) 
@@ -63,7 +59,6 @@ void TextDetect::Model_Infer(cv::Mat& img, vector<vector<vector<int>>>& boxes, v
     CHECK(cudaMalloc(&buffers[outputIndex], output_size*sizeof(float)));
 
     // 做推理
-//    context->enqueue(1, buffers, stream, nullptr);
     context->enqueueV2(buffers, stream, nullptr);
     // 从gpu取数据到cpu上
     CHECK(cudaMemcpyAsync(outBlob, buffers[outputIndex], output_size * sizeof(float), cudaMemcpyDeviceToHost, stream));

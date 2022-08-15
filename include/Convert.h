@@ -37,19 +37,16 @@ public:
     };
 
     // 通过onnx来创建engine,并将创建的engine保存
-    bool buildEngine(const string& onnx_path, const string & engineName); /*/ input: onnxModelPath  /*/
-
-    // 输入engine名，若不存在，buildEngine创建一个, 并写成文件。
-    bool getEngine(const string& engine_path, const string & onnx_path);
+    bool buildEngine(const string& onnx_path, const string & save_engine_path); /*/ input: onnxModelPath  /*/
 
     // 解engine
     bool deserializeEngine(const string& engine_path);
 
-    int Model_Init(const string& engine_path, const string onnx_path=" ");
+    int Model_Init(const string& engine_path, const string &onnx_path, const string &save_engine_dir="../myEngines/");
 
-    int get_engine_max_batch(){return this->MAX_DIMS_[0];};
+    int get_engine_max_batch(){return MAX_DIMS_[0];};
 
-    ~Convert();
+    virtual ~Convert();
 
     Logger gLogger; //日志
     std::unique_ptr<nvinfer1::ICudaEngine> engine = nullptr;
@@ -60,7 +57,4 @@ private:
     vector<int> MIN_DIMS_ = {1, 3, 20, 20};
     vector<int> OPT_DIMS_ = {1, 3, 512, 512};
     vector<int> MAX_DIMS_ = {1, 3, 640, 640};
-//    vector<int> MIN_DIMS_ = {1, 3, 416, 416};
-//    vector<int> OPT_DIMS_ = {1, 3, 416, 416};
-//    vector<int> MAX_DIMS_ = {1, 3, 416, 416};
 };

@@ -1,8 +1,8 @@
 # include "Convert.h"
+# include "utility.h"
 
-bool Convert::buildEngine(const string& onnxModelPath, const string& engineName){
+bool Convert::buildEngine(const string& onnxModelPath, const string & save_engine_path){
     /*/ input: onnxModelPath  /*/
-//    std::string engineName_tmp = engineName;
     auto builder = std::unique_ptr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger));
     if(!builder){
         return false;
@@ -35,8 +35,6 @@ bool Convert::buildEngine(const string& onnxModelPath, const string& engineName)
     }
     builder->setMaxBatchSize(maxBatchSize);
 
-    // Save the input height, width, and channels.
-    // Require this info for inference.
     const auto input = network->getInput(0);
     const auto inputName = input->getName();
 
@@ -48,38 +46,13 @@ bool Convert::buildEngine(const string& onnxModelPath, const string& engineName)
 
     std::unique_ptr<IHostMemory> plan{builder->buildSerializedNetwork(*network, *config)};
 
-    std::ofstream fout(engineName.c_str(), std::ofstream::binary);
+    std::ofstream fout(save_engine_path.c_str(), std::ofstream::binary);
     if (!fout) {
         std::cerr << "could not open engine output file, saveEngine failed!" << std::endl;
         return false;
     }
     fout.write(reinterpret_cast<const char*>(plan->data()), plan->size());
-    std::cout << "Success, saved engine to " << engineName << std::endl;
-    return true;
-}
-
-
-bool Convert::getEngine(const string& engineName, const string& onnx_path){
-
-    if(access(engineName.c_str(), F_OK ) == -1){  // 如果该engine文件不存在
-
-        cout << engineName<< " engine file is not exist, need to be created" << endl;
-
-        if(access(onnx_path.c_str(), F_OK ) == -1){ // 如果onnx文件不存在
-            cout << onnx_path <<" onnx path is not exist, can't create a engine from it "<<endl;
-            return false;
-        }
-        else{
-            if(buildEngine(onnx_path, engineName))
-                cout<<"sucessful from onnx create "<< engineName <<endl;
-            else{
-                cout<<"error in getting engine"<< engineName <<endl;
-                return false;
-            }
-        }       
-    }
-    else
-       cout<< engineName <<" already exist"<<endl; 
+    std::cout << "Success, save engine to " << save_engine_path << std::endl;
     return true;
 }
 
@@ -111,22 +84,39 @@ bool Convert::deserializeEngine(const string& engineName){
     return true;
 }
 
-
-int Convert::Model_Init(const string& engine_path, string onnx_path){
-    if(getEngine(engine_path, onnx_path)){
-        if(deserializeEngine(engine_path))
-            cout<< "Sucessful deserialize engine file!" << endl;
-        else{
-            cout<<"deserialize engine failed, model init failed"<<endl;
-            return -2;
+int Convert::Model_Init(const string& engine_path, const string &onnx_path, const string &save_engine_dir){
+    string our_engine_path = "";
+    if (OCR::Utility::PathExists(engine_path)){
+        our_engine_path = engine_path;
+        cout << "[" << engine_path << "] exists, start to read engine file: " << endl;
+    }else{
+        cout << "[" << engine_path << "] does not exist, we will use [" << onnx_path<< "] to build engine." << endl;
+        if (OCR::Utility::PathExists(engine_path)){
+            cout<<" onnx file does not exist, please check your onnx path: [" << onnx_path<< "]"<<endl;
+        }else{
+            if (!OCR::Utility::PathExists(save_engine_dir)) {
+                OCR::Utility::CreateDir(save_engine_dir);
+            }
+            string onnx_base_name = OCR::Utility::basename(onnx_path);
+            auto index = onnx_base_name.find_last_of(".");
+            our_engine_path = save_engine_dir + "/" + onnx_base_name.substr(0, index) + "_" + precision_ + ".engine";
+            if(buildEngine(onnx_path, our_engine_path))
+                cout<<" Sucessfully build [" << our_engine_path << "] engine from onnx." <<endl;
+            else{
+                cout<<" error in build engine from onnx" <<endl;
+                return -1;
+            }
         }
     }
+    if(deserializeEngine(our_engine_path))
+        cout<< " Sucessfully deserialize [" << our_engine_path<< "]" << endl;
     else{
-        cout<<"can't get engine file, model init failed"<<endl;
-        return -1;
+        cout<<" deserialize [" << our_engine_path<< "] failed, model init failed"<<endl;
+        return -2;
     }
     assert(engine->getNbBindings() == 2); //check if is a input and a output
     return 0;
 }
+
 Convert::~Convert(){
 }

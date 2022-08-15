@@ -8,8 +8,7 @@ namespace OCR {
     ocr::ocr() {
         if (FLAGS_det) {
             this->td = new TextDetect(
-                    FLAGS_det_onnx_dir, FLAGS_det_engine_dir,
-                    FLAGS_det_onnx_input_name, FLAGS_det_onnx_output_name,
+                    FLAGS_det_onnx_dir, FLAGS_det_engine_dir, FLAGS_save_engine_dir,
                     FLAGS_max_side_len, FLAGS_det_db_thresh,
                     FLAGS_det_db_box_thresh, FLAGS_det_db_unclip_ratio,
                     FLAGS_use_dilation, FLAGS_use_polygon_score,
@@ -17,15 +16,13 @@ namespace OCR {
         }
         if (FLAGS_cls && FLAGS_use_angle_cls) {
             this->tc = new TextClassifier(
-                    FLAGS_cls_onnx_dir, FLAGS_cls_engine_dir,
-                    FLAGS_cls_onnx_input_name, FLAGS_cls_onnx_output_name,
+                    FLAGS_cls_onnx_dir, FLAGS_cls_engine_dir, FLAGS_save_engine_dir,
                     FLAGS_cls_batch_num, FLAGS_cls_thresh,
                     FLAGS_build_precision);
         }
         if (FLAGS_rec) {
             this->tr = new TextRec(
-                    FLAGS_rec_onnx_dir, FLAGS_rec_engine_dir,
-                    FLAGS_rec_onnx_input_name, FLAGS_rec_onnx_output_name,
+                    FLAGS_rec_onnx_dir, FLAGS_rec_engine_dir, FLAGS_save_engine_dir,
                     FLAGS_rec_char_dict_path, FLAGS_rec_batch_num,
                     FLAGS_rec_img_h, FLAGS_rec_img_w,
                     FLAGS_build_precision);

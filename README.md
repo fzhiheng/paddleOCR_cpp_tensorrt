@@ -16,28 +16,31 @@ cmake .. -DTensorRT_DIR=/usr/local/tensorrt -DOpenCV_DIR=/usr/local -DCUDA_TOOLK
 
 ## run
 
-### build engine from onnx and inference
+### build engine from onnx and inference (you only have onnx files)
 
 ```shell
 ./build/ocr --build_precision="fp16" 
---det_onnx_dir="../myModels/det.onnx" --det_engine_dir="../myEngines/det_fp16.engine"
---det_onnx_input_name="x" --det_onnx_output_name="save_infer_model/scale_0.tmp_1"
+--det_onnx_dir="../myModels/det.onnx" 
 --rec_onnx_ dir="../myModels/ch_rec_v3.onnx"
---rec_engine_dir="../myEngines/ch_rec_fp16.engine"
---rec_onnx_input_name="x" --rec_onnx_output_name="softmax_5.tmp_0"
+--save_engine_dir="../myEngines/"
 --rec_char_dict_path="../myModels/dict_txt/ppocr_keys_v1.txt"
---det=true --cls=false --rec=true  --image_dir="../testImgs/11.jpg"
+--rec_batch_num=1
+--det=true --cls=false --rec=true  
+--image_dir="../testImgs/11.jpg" --output="./output/"
 ```
 
-### load engine and inference
+It will build a engine from your onnx file. In this example above, you will get a engine named `det_fp16.engine` in  `../myEngines/`. 
+The detection and recognize results are in `./output/`. 
+The rec_batch_num should be $\leq$ 8. If you want bigger batch size, please modify the MAX_DIMS_ in `./src/rec.h`.
+
+### load engine and inference (you already have engines)
 
 ```shell
 ./build/ocr 
 --det_engine_dir="../myEngines/det_fp16.engine"
---det_onnx_input_name="x" --det_onnx_output_name="save_infer_model/scale_0.tmp_1"
---rec_engine_dir="../myEngines/ch_rec_fp16.engine"
---rec_onnx_input_name="x" --rec_onnx_output_name="softmax_5.tmp_0"
+--rec_engine_dir="../myEngines/ch_rec_v3_fp16.engine"
 --rec_char_dict_path="../myModels/dict_txt/ppocr_keys_v1.txt"
 --rec_batch_num=1
---det=true --cls=false --rec=true --image_dir="../testImgs11.jpg"
+--det=true --cls=false --rec=true 
+--image_dir="../testImgs/11.jpg" --output="./output/"
 ```

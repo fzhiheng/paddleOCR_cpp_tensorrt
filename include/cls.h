@@ -22,16 +22,14 @@ namespace OCR {
 
     public:
         explicit TextClassifier(const std::string &cls_onnx_dir, const std::string &cls_engine_dir,
-                                const std::string &cls_onnx_input_name, const std::string &cls_onnx_output_name,
+                                const std::string &save_engine_dir,
                                 const int &cls_batch_num, const double &cls_thresh,
-                                const std::string & precision):Convert({1,3,48,192},{1,3,48,192},{8,3,48,192},precision),
-                                INPUT_BLOB_NAME(cls_onnx_input_name.c_str()),
-                                OUTPUT_BLOB_NAME(cls_onnx_output_name.c_str()) {
+                                const std::string & precision):Convert({1,3,48,192},{1,3,48,192},{8,3,48,192},precision){
 
             this->cls_batch_num_ = cls_batch_num;
             this->cls_thresh_ = cls_thresh;
 
-            Model_Init(cls_engine_dir, cls_onnx_dir);
+            Model_Init(cls_engine_dir, cls_onnx_dir, save_engine_dir);
         };
 
         void Model_Infer(std::vector<cv::Mat> img_list,
@@ -43,9 +41,6 @@ namespace OCR {
         ~TextClassifier();
 
     private:
-        // input/output layer
-        const char *INPUT_BLOB_NAME = "x";
-        const char *OUTPUT_BLOB_NAME = "save_infer_model/scale_0.tmp_1";
 
         std::vector<float> mean_ = {0.5f, 0.5f, 0.5f};
         std::vector<float> scale_ = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};

@@ -21,13 +21,11 @@ namespace OCR {
 class TextDetect: public Convert{
     public:
         explicit TextDetect(const std::string &det_onnx_dir, const std::string &det_engine_dir,
-                            const std::string &det_onnx_input_name, const std::string &det_onnx_output_name,
+                            const std::string &save_engine_dir,
                             const int &max_side_len, const double &det_db_thresh,
                             const double &det_db_box_thresh, const double &det_db_unclip_ratio,
                             const bool &use_dilation, const bool &use_polygon_score,
-                            const std::string & precision):Convert(precision),
-                            INPUT_BLOB_NAME (det_onnx_input_name.c_str()),
-                            OUTPUT_BLOB_NAME(det_onnx_output_name.c_str()){
+                            const std::string & precision):Convert(precision){
 
             this->max_side_len_ = max_side_len;
             this->det_db_thresh_ = det_db_thresh;
@@ -36,7 +34,7 @@ class TextDetect: public Convert{
             this->use_dilation_ = use_dilation;
             this->use_polygon_score_ = use_polygon_score;
 
-            Model_Init(det_engine_dir, det_onnx_dir);
+            Model_Init(det_engine_dir, det_onnx_dir, save_engine_dir);
         };
         void Model_Infer(cv::Mat& Input_Image, vector<vector<vector<int>>> &boxes, vector<double> &times);
         ~TextDetect();
@@ -48,8 +46,6 @@ class TextDetect: public Convert{
         double det_db_unclip_ratio_ = 2.0;
         bool use_dilation_ = false;
         bool use_polygon_score_ = false; // if use_polygon_score_ is true, it will be slow
-        const char *INPUT_BLOB_NAME = "x";
-        const char *OUTPUT_BLOB_NAME = "save_infer_model/scale_0.tmp_1";
 
         // input image
         int max_side_len_ = 640;

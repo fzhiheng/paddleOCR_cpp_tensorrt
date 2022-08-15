@@ -28,10 +28,10 @@ message(${OpenCV_VERSION})
 
 file(GLOB SRC_FILE src/*.cpp)
 
-add_executable(rec main.cpp ${SRC_FILE})
+add_executable(ocr main.cpp ${SRC_FILE})
 
-target_include_directories(rec PUBLIC ${OpenCV_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${TensorRT_INCLUDE_DIRS}
+target_include_directories(ocr PUBLIC ${OpenCV_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${TensorRT_INCLUDE_DIRS}
         ${TensorRT_DIR}/samples/common)
-target_link_libraries(rec  ${OpenCV_LIBS} ${CUDA_LIBRARIES} ${TensorRT_LIBRARIES} ${GFLAGS_LIBRARIES})
+target_link_libraries(ocr  ${OpenCV_LIBS} ${CUDA_LIBRARIES} ${TensorRT_LIBRARIES} ${GFLAGS_LIBRARIES})
 
 add_definitions(-O2 -pthread)

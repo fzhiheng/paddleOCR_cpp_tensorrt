@@ -45,7 +45,7 @@ namespace OCR {
 
             // --------------------- inference ---------------------
             void * buffers[2];
-            int inputIndex = engine->getBindingIndex(INPUT_BLOB_NAME);
+            int inputIndex = 0;
             CHECK(cudaMalloc(&buffers[inputIndex], data_size * sizeof(float)));
 
             auto inference_start = std::chrono::steady_clock::now();
@@ -54,8 +54,8 @@ namespace OCR {
             CHECK(cudaStreamCreate(&stream));
             // 将数据放到gpu上
             CHECK(cudaMemcpyAsync(buffers[inputIndex], inBlob, data_size * sizeof(float), cudaMemcpyHostToDevice, stream));
-            //#### 将输入图像的大小写入context中 #######
-            context->setOptimizationProfile(0); // 让convert.h创建engine的动态输入配置生效
+
+            context->setOptimizationProfileAsync(0, stream);
             auto in_dims = context->getBindingDimensions(inputIndex); //获取带有可变维度的输入维度信息
             in_dims.d[0]=batch_num;
             in_dims.d[1]=3;
@@ -65,7 +65,7 @@ namespace OCR {
             context->setBindingDimensions(inputIndex, in_dims); // 根据输入图像大小更新输入维度
 
             // 为buffer[1]指针（输出）定义空间大小
-            int outputIndex = engine->getBindingIndex(OUTPUT_BLOB_NAME);
+            int outputIndex = 1;
             auto out_dims = context->getBindingDimensions(outputIndex);
 
             int output_size=1;

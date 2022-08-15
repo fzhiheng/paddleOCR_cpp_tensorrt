@@ -13,7 +13,7 @@ void TextRec::Model_Infer(vector<cv::Mat> img_list, std::vector<std::string> &re
             std::chrono::steady_clock::now() - std::chrono::steady_clock::now();
 
     int img_num = img_list.size();
-    std::vector<float> width_list; //存储所有待识别图像的宽高比
+    std::vector<float> width_list;
     for (int i = 0; i < img_num; i++){
         width_list.push_back(float(img_list[i].cols) / img_list[i].rows);
     }
@@ -39,13 +39,13 @@ void TextRec::Model_Infer(vector<cv::Mat> img_list, std::vector<std::string> &re
 
     //    I do not think this step bellow is necessary, because we want to get max_wh_ratio,
     //    indices is just the index from smallest to largest according to wh_ratio
-    //    max_wh_ratio = max(max_wh_ratio, width_list[indices[end_img_no-1]]); // maybe it will be faster
-        for (int ino = beg_img_no; ino < end_img_no; ino++) {
-            int h = img_list[indices[ino]].rows;
-            int w = img_list[indices[ino]].cols;
-            float wh_ratio = w * 1.0 / h;
-            max_wh_ratio = max(max_wh_ratio, wh_ratio);
-        }
+        max_wh_ratio = max(max_wh_ratio, width_list[indices[end_img_no-1]]); // maybe it will be faster
+//        for (int ino = beg_img_no; ino < end_img_no; ino++) {
+//            int h = img_list[indices[ino]].rows;
+//            int w = img_list[indices[ino]].cols;
+//            float wh_ratio = w * 1.0 / h;
+//            max_wh_ratio = max(max_wh_ratio, wh_ratio);
+//        }
 
         // 将img按照从小到大的宽高比依次处理并放入norm_img_batch中
         // 处理方法为resize到高为rec_img_h，宽为rec_img_h*max_wh_ratio
@@ -73,7 +73,8 @@ void TextRec::Model_Infer(vector<cv::Mat> img_list, std::vector<std::string> &re
         float *inBlob = new float[data_size];
         this->permute_op_.Run(norm_img_batch, inBlob);
 
-        int inputIndex = engine->getBindingIndex(INPUT_BLOB_NAME);
+//        int inputIndex = engine->getBindingIndex(INPUT_BLOB_NAME);
+        int inputIndex = 0;
         CHECK(cudaMalloc(&buffers[inputIndex], data_size * sizeof(float)));
 
         auto inference_start = std::chrono::steady_clock::now();
@@ -84,17 +85,17 @@ void TextRec::Model_Infer(vector<cv::Mat> img_list, std::vector<std::string> &re
         CHECK(cudaMemcpyAsync(buffers[inputIndex], inBlob, data_size * sizeof(float), cudaMemcpyHostToDevice, stream));
 
         //#### 将输入图像的大小写入context中 #######
-        context->setOptimizationProfile(0); // 让convert.h创建engine的动态输入配置生效
-        auto in_dims = context->getBindingDimensions(inputIndex); //获取带有可变维度的输入维度信息
+        context->setOptimizationProfileAsync(0, stream);
+        auto in_dims = context->getBindingDimensions(inputIndex);
         in_dims.d[0]=batch_num;
         in_dims.d[1]=3;
         in_dims.d[2]=imgH;
         in_dims.d[3]=batch_width;
         
-        context->setBindingDimensions(inputIndex, in_dims); // 根据输入图像大小更新输入维度
+        context->setBindingDimensions(inputIndex, in_dims);
 
         // 为buffer[1]指针（输出）定义空间大小
-        int outputIndex = engine->getBindingIndex(OUTPUT_BLOB_NAME);
+        int outputIndex = 1;
         auto out_dims = context->getBindingDimensions(outputIndex);
 
         int output_size=1;

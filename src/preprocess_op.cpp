@@ -122,26 +122,26 @@ void CrnnResizeImg::Run(const cv::Mat &img, cv::Mat &resize_img, float wh_ratio,
 
 // 若图片宽高比大于预设值，调整为 [imgH， imgW]
 // 若图片宽高比小于预设值，调整为 [imgH， imgW]，宽度不足，在右侧进行填充
-void ClsResizeImg::Run(const cv::Mat &img, cv::Mat &resize_img,
-                       const std::vector<int> &rec_image_shape) {
-  int imgC, imgH, imgW;
-  imgC = rec_image_shape[0];
-  imgH = rec_image_shape[1];
-  imgW = rec_image_shape[2];
+    void ClsResizeImg::Run(const cv::Mat &img, cv::Mat &resize_img,
+                           const std::vector<int> &rec_image_shape) {
+      int imgC, imgH, imgW;
+      imgC = rec_image_shape[0];
+      imgH = rec_image_shape[1];
+      imgW = rec_image_shape[2];
 
-  float ratio = float(img.cols) / float(img.rows);
-  int resize_w, resize_h;
-  if (ceilf(imgH * ratio) > imgW)
-    resize_w = imgW;
-  else
-    resize_w = int(ceilf(imgH * ratio));
+      float ratio = float(img.cols) / float(img.rows);
+      int resize_w;
+      if (ceilf(imgH * ratio) > imgW)
+        resize_w = imgW;
+      else
+        resize_w = int(ceilf(imgH * ratio));
 
-  cv::resize(img, resize_img, cv::Size(resize_w, imgH), 0.f, 0.f,
-             cv::INTER_LINEAR);
-  if (resize_w < imgW) {
-    cv::copyMakeBorder(resize_img, resize_img, 0, 0, 0, imgW - resize_w,
-                       cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-  }
+      cv::resize(img, resize_img, cv::Size(resize_w, imgH), 0.f, 0.f,
+                 cv::INTER_LINEAR);
+      if (resize_w < imgW) {
+        cv::copyMakeBorder(resize_img, resize_img, 0, 0, 0, imgW - resize_w,
+                           cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+      }
 }
 
-} // namespace OCR
+}

@@ -21,13 +21,10 @@ namespace OCR {
 
 class TextRec: public Convert{
 public:
-    explicit TextRec(const std::string &rec_onnx_dir, const std::string &rec_engine_dir,
-                     const std::string &rec_onnx_input_name, const std::string &rec_onnx_output_name,
+    explicit TextRec(const std::string &rec_onnx_dir, const std::string &rec_engine_dir, const std::string &save_engine_dir,
                      const std::string &rec_char_dict_path, const int &rec_batch_num,
                      const int &rec_img_h, const int &rec_img_w, const std::string & precision
-                     ):Convert({1, 3, rec_img_h, rec_img_w}, {1, 3, rec_img_h, rec_img_w}, {8, 3, rec_img_h, rec_img_w*5},precision),
-                     INPUT_BLOB_NAME(rec_onnx_input_name.c_str()),
-                     OUTPUT_BLOB_NAME(rec_onnx_output_name.c_str()){
+                     ):Convert({1, 3, rec_img_h, rec_img_w}, {1, 3, rec_img_h, rec_img_w}, {8, 3, rec_img_h, rec_img_w*5},precision){
 
         this->label_path_ = rec_char_dict_path;
         this->rec_batch_num_ = rec_batch_num;
@@ -37,7 +34,7 @@ public:
         this->label_list_.insert(this->label_list_.begin(), "#");
         this->label_list_.push_back(" ");
 
-        Model_Init(rec_engine_dir, rec_onnx_dir);
+        Model_Init(rec_engine_dir, rec_onnx_dir, save_engine_dir);
     };
     void Model_Infer(vector<cv::Mat> img_list, std::vector<std::string> &rec_texts,
                      std::vector<float> &rec_text_scores, vector<double> &times);
@@ -47,9 +44,6 @@ private:
     //task
     std::vector<std::string> label_list_;
     string label_path_ = "../models/txt/ppocr_keys_v1.txt";
-
-    const char *INPUT_BLOB_NAME = "x";
-    const char *OUTPUT_BLOB_NAME = "softmax_5.tmp_0";
 
     int rec_batch_num_= 1;
     int rec_img_h_ = 48;
