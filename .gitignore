@@ -1,4 +1,5 @@
 .idea/
+.vs/
 cmake-build-debug/
 build/
 myEngines/*
